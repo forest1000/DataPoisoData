@@ -9,9 +9,11 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List
 
+
 import pandas as pd
 import torch
 import yaml
+from copy import copy
 from torch import nn
 from torch.utils.data import DataLoader, WeightedRandomSampler
 
@@ -114,19 +116,29 @@ def apply_attack_to_dataloaders(attack: Attack, dataloaders: Dict[int, Dict[str,
         )
 
 
-def infer_data_properties(dataloaders: Dict[int, Dict[str, DataLoader[Any]]]) -> tuple[torch.Size, int]:
-    for loaders in dataloaders.values():
-        train_loader = loaders.get("train")
-        if train_loader is None:
-            continue
-        batch = next(iter(train_loader))
-        inputs, targets = batch[:2]
-        input_shape = inputs.shape[1:]
-        max_label = int(torch.max(targets).item())
-        num_classes = max_label + 1
-        return input_shape, num_classes
-    raise ValueError("Unable to infer data properties from dataloaders")
+def local_train(self, global_state_dict: Dict[str, Any], epochs: int) -> Dict[str, Any]:
+    self.model.load_state_dict(global_state_dict)
+    self.model.train()
+    optimizer = self.optimizer_builder(self.model.parameters())
 
+    num_samples = 0
+    total_batches = 0
+    for _ in range(epochs):
+        for batch in self.train_loader:
+            inputs, targets = batch[:2]
+            inputs = inputs.to(self.device)
+            targets = targets.to(self.device)
+            optimizer.zero_grad()
+            outputs = self.model(inputs)
+            loss = self.criterion(outputs, targets)
+            loss.backward()
+            optimizer.step()
+            if total_batches == 0:  # 最初のエポックのみカウント
+                num_samples += inputs.size(0)
+            total_batches += 1
+
+    state_dict = copy.deepcopy(self.model.state_dict())
+    return {"state_dict": state_dict, "num_samples": num_samples}
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Federated learning runner")

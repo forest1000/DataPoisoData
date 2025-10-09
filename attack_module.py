@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import math
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Iterable, Optional, Set
+from typing import Any, Dict, Iterable, Optional, Set, List
 
 import numpy as np
 import torch
@@ -61,7 +61,7 @@ class LabelFlipAttack(Attack):
         self,
         target_clients: Set[int],
         poison_ratio: float,
-        mapping: Optional[Dict[int, int]] | None = None,
+        mapping: Dict[int, int] | None = None,
         seed: Optional[int] = None,
     ) -> None:
         if not 0.0 <= poison_ratio <= 1.0:
@@ -91,7 +91,7 @@ class LabelFlipAttack(Attack):
             mapping[label] = unique[(idx + 1) % len(unique)]
         return mapping
 
-    def _collect_labels(self, dataset: Dataset[Any]) -> Iterable[int]:
+    def _collect_labels(self, dataset: Dataset[Any]) -> List[int]:
         labels = []
         for _, label, *rest in dataset:  # type: ignore[misc]
             labels.append(int(label))

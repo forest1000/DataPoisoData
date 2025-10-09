@@ -47,10 +47,14 @@ project_root/
 ## Installation
 
 ```bash
-python -m venv .venv
+python3.10 -m venv .venv
 source .venv/bin/activate
 pip install -U pip
-pip install torch torchvision flamby scikit-learn numpy pandas matplotlib pytest mypy black isort
+pip install torch torchvision scikit-learn numpy pandas matplotlib pytest mypy black isort monai
+cd ..
+git clone https://github.com/owkin/FLamby.git
+cd FLamby
+pip install -e .
 ```
 
 > **Note:** The provided tests rely on lightweight dummy datasets and do not

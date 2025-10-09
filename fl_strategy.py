@@ -52,6 +52,7 @@ class TorchClient(Client):
         optimizer = self.optimizer_builder(self.model.parameters())
 
         num_samples = 0
+        total_batches = 0
         for _ in range(epochs):
             for batch in self.train_loader:
                 inputs, targets = batch[:2]
@@ -62,11 +63,12 @@ class TorchClient(Client):
                 loss = self.criterion(outputs, targets)
                 loss.backward()
                 optimizer.step()
-                num_samples += inputs.size(0)
+                if total_batches == 0:  # 最初のエポックのみカウント
+                    num_samples += inputs.size(0)
+                total_batches += 1
 
         state_dict = copy.deepcopy(self.model.state_dict())
         return {"state_dict": state_dict, "num_samples": num_samples}
-
 
 class FedAvgServer(Server):
     """Server implementing the FedAvg aggregation."""
