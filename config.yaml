@@ -1,0 +1,35 @@
+experiment:
+  output_dir: "experiments/runs"
+  seed: 42
+data:
+  dataset_name: "fed-ixi"
+  num_clients: 2
+  batch_size: 4
+  num_workers: 0
+  resize: [64, 64]
+  normalize:
+    - [0.5]
+    - [0.5]
+  augment: false
+  use_weighted_sampler: false
+fl:
+  strategy: "fedavg"
+  rounds: 2
+  local_epochs: 1
+  lr: 0.001
+  optimizer: "sgd"
+  client_fraction: 1.0
+attack:
+  name: "label_flip"
+  target_clients: [0]
+  poison_ratio: 0.2
+  mapping: {}
+defense:
+  name: "cosine"
+  threshold: 0.1
+  topk: null
+eval:
+  splits: ["val", "test"]
+  average: "macro"
+logging:
+  level: "INFO"
